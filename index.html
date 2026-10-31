@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Small Projects Desk</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Hebrew:wght@400;500;600&display=swap">
+<style>
+[hidden] { display: none !important; }
+body { margin: 0; }
+/* Layout: a project index on the left, the open project's tasks grouped by
+   status on the right. On phones the index becomes a strip above the tasks. */
+:root {
+  --bg: #EEF0F5;
+  --surface: #FFFFFF;
+  --surface-2: #E3E6EF;
+  --ink: #171B2C;
+  --muted: #5B6178;
+  --line: #D2D6E3;
+  --accent: #3046C5;
+  --accent-ink: #FFFFFF;
+  --doing: #8F5600;
+  --doing-bg: #FBE9C6;
+  --doing-mark: #D9920F;
+  --done: #1B6E45;
+  --done-bg: #D6EEE1;
+  --done-mark: #2C9A63;
+  --danger: #B3261E;
+  --danger-bg: #FADDD9;
+
+  --font-display: "Rubik", "IBM Plex Sans Hebrew", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "IBM Plex Sans Hebrew", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --radius: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11131B;
+    --surface: #1A1D29;
+    --surface-2: #262A3A;
+    --ink: #E8EAF3;
+    --muted: #9CA2BA;
+    --line: #30354A;
+    --accent: #93A3FF;
+    --accent-ink: #11131B;
+    --doing: #F2B550;
+    --doing-bg: #3A2C10;
+    --doing-mark: #E0A030;
+    --done: #68D09A;
+    --done-bg: #143524;
+    --done-mark: #45B57C;
+    --danger: #FF8A80;
+    --danger-bg: #43211E;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11131B;
+  --surface: #1A1D29;
+  --surface-2: #262A3A;
+  --ink: #E8EAF3;
+  --muted: #9CA2BA;
+  --line: #30354A;
+  --accent: #93A3FF;
+  --accent-ink: #11131B;
+  --doing: #F2B550;
+  --doing-bg: #3A2C10;
+  --doing-mark: #E0A030;
+  --done: #68D09A;
+  --done-bg: #143524;
+  --done-mark: #45B57C;
+  --danger: #FF8A80;
+  --danger-bg: #43211E;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+.app {
+  max-width: 66rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+  padding-block: 1.75rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.sr {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+h1, h2, h3, p, ul { margin: 0; }
+ul { padding: 0; list-style: none; }
+
+/* ---------- top bar ---------- */
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+.brand {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.25rem;
+  letter-spacing: -.01em;
+}
+.top-right { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; }
+.account { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.account-email { color: var(--muted); font-size: .85rem; overflow-wrap: anywhere; }
+.signin {
+  display: flex; flex-direction: column; align-items: center; gap: .6rem;
+  text-align: center; padding: 3rem 1.5rem;
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+}
+.signin strong { font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; }
+.signin span { color: var(--muted); max-width: 40ch; }
+.totals { color: var(--muted); font-size: .9rem; font-variant-numeric: tabular-nums; }
+
+.notice {
+  background: var(--doing-bg);
+  color: var(--doing);
+  border-radius: var(--radius);
+  padding: .65rem .9rem;
+  font-size: .9rem;
+}
+
+/* ---------- controls ---------- */
+input[type="text"], input[type="date"], select, textarea {
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: .55rem .7rem;
+  min-width: 0;
+  width: 100%;
+}
+textarea { display: block; resize: vertical; min-height: 7rem; line-height: 1.45; }
+:is(input, textarea)::placeholder { color: var(--muted); }
+:is(input, textarea):disabled { color: var(--muted); }
+button { font: inherit; color: inherit; cursor: pointer; }
+.btn {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: .55rem .9rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.btn.quiet {
+  background: transparent;
+  color: var(--muted);
+  border-color: var(--line);
+  font-weight: 500;
+  padding: .35rem .7rem;
+  font-size: .875rem;
+}
+.btn.quiet:hover { color: var(--ink); border-color: var(--muted); }
+.btn.danger { background: var(--danger); border-color: var(--danger); color: var(--surface); padding: .35rem .7rem; font-size: .875rem; }
+.btn.quiet.small { padding: .22rem .65rem; font-size: .8rem; border-radius: 99px; }
+.btn:disabled { opacity: .6; cursor: default; }
+:is(button, input, textarea):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.inline-form { display: flex; gap: .5rem; }
+.inline-form input { flex: 1 1 auto; }
+
+/* ---------- panes ---------- */
+.panes {
+  display: grid;
+  grid-template-columns: minmax(0, 17rem) minmax(0, 1fr);
+  gap: 2.5rem;
+  align-items: start;
+}
+.index { display: flex; flex-direction: column; gap: .9rem; min-width: 0; }
+.label {
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+#project-list { display: flex; flex-direction: column; gap: .25rem; }
+.project {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .35rem .75rem;
+  align-items: baseline;
+  width: 100%;
+  text-align: start;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  padding: .6rem .7rem;
+}
+.project:hover { background: var(--surface-2); }
+.project[aria-current="true"] {
+  background: var(--surface);
+  border-color: var(--line);
+}
+.project-name {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.project[aria-current="true"] .project-name { font-weight: 600; }
+.project-count { color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums; }
+.project .meter { grid-column: 1 / -1; height: 3px; }
+
+.meter {
+  display: flex;
+  height: 6px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.meter span { display: block; height: 100%; }
+.meter .m-done { background: var(--done-mark); }
+.meter .m-doing { background: var(--doing-mark); }
+
+/* ---------- open project ---------- */
+#detail { min-width: 0; }
+.placeholder {
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: var(--muted);
+}
+.placeholder strong {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.15rem;
+  color: var(--ink);
+  margin-bottom: .25rem;
+}
+#project-view { display: flex; flex-direction: column; gap: 1.1rem; }
+.phead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .6rem 1rem;
+}
+#project-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2rem);
+  line-height: 1.15;
+  letter-spacing: -.015em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  flex: 1 1 14rem;
+}
+#delete-zone { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; font-size: .875rem; }
+.progress { display: flex; flex-direction: column; gap: .45rem; }
+#project-summary { color: var(--muted); font-size: .9rem; font-variant-numeric: tabular-nums; }
+.summary-row { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .65rem; }
+.pill-done {
+  background: var(--done-bg);
+  color: var(--done);
+  border-radius: 99px;
+  padding: .12rem .6rem;
+  font-size: .8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.summary-row .due { font-size: .9rem; color: var(--ink); }
+.summary-row .due.late { color: var(--danger); }
+.summary-row .due.soon { color: var(--doing); }
+.project-due { font-size: .78rem; color: var(--muted); }
+.project-flags { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: .2rem .5rem; }
+.pill-urgent {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border-radius: 99px;
+  padding: .12rem .6rem;
+  font-size: .8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.project-flags .pill-urgent { font-size: .7rem; padding: .05rem .45rem; }
+.btn.quiet.good { color: var(--done); border-color: var(--done-mark); }
+.btn.quiet.good:hover { color: var(--done); background: var(--done-bg); border-color: var(--done-mark); }
+.project.is-done .project-name { color: var(--muted); }
+.project.is-done .project-count { color: var(--done); font-weight: 600; }
+
+#groups { display: flex; flex-direction: column; gap: 1.5rem; margin-top: .4rem; }
+.group { display: flex; flex-direction: column; }
+.group-head {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding-bottom: .45rem;
+  border-bottom: 1px solid var(--line);
+}
+.dot { width: .6rem; height: .6rem; border-radius: 50%; flex: none; border: 2px solid var(--muted); }
+.dot.doing { border-color: var(--doing-mark); background: var(--doing-mark); }
+.dot.done { border-color: var(--done-mark); background: var(--done-mark); }
+.group-count { color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums; }
+
+.task {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem .75rem;
+  padding: .7rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.task-main { flex: 1 1 13rem; min-width: 0; display: flex; flex-direction: column; gap: .15rem; }
+.task-title { overflow-wrap: anywhere; }
+/* Right-to-left names keep their own reading order but share the page's left edge. */
+.task-title, .note-preview, .project-name, #project-name { text-align: left; }
+.task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .1rem .65rem;
+  min-width: 0;
+  font-size: .85rem;
+  color: var(--muted);
+}
+.due { white-space: nowrap; font-weight: 500; font-variant-numeric: tabular-nums; }
+.due.late { color: var(--danger); font-weight: 600; }
+.due.soon { color: var(--doing); font-weight: 600; }
+.note-preview { flex: 1 1 8rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.task.is-done .task-title { color: var(--muted); text-decoration: line-through; }
+.task-actions { display: flex; align-items: center; gap: .4rem; flex: none; }
+
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  background: var(--surface);
+  padding: 2px;
+}
+.seg button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 99px;
+  padding: .22rem .65rem;
+  font-size: .8rem;
+  white-space: nowrap;
+}
+.seg button:hover:not(:disabled):not([aria-pressed="true"]) { color: var(--ink); }
+.seg button[aria-pressed="true"] { font-weight: 600; }
+.seg button[aria-pressed="true"][data-status="todo"] { background: var(--surface-2); color: var(--ink); }
+.seg button[aria-pressed="true"][data-status="doing"] { background: var(--doing-bg); color: var(--doing); }
+.seg button[aria-pressed="true"][data-status="done"] { background: var(--done-bg); color: var(--done); }
+.seg button:disabled { cursor: default; }
+
+.remove {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+.remove:hover { background: var(--surface-2); color: var(--danger); }
+.empty-tasks { color: var(--muted); padding: 1rem 0; }
+
+/* ---------- task details dialog ---------- */
+dialog {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 1.35rem;
+  width: min(30rem, calc(100% - 2rem));
+  max-height: calc(100% - 2rem);
+}
+dialog::backdrop { background: rgba(10, 12, 20, .55); }
+.dialog-form { display: flex; flex-direction: column; gap: 1.05rem; }
+.field { display: flex; flex-direction: column; gap: .35rem; min-width: 0; }
+fieldset.field { border: 0; padding: 0; margin: 0; }
+.field > label, .field > legend { font-size: .8rem; font-weight: 600; color: var(--muted); padding: 0; }
+.field > legend { margin-bottom: .35rem; }
+dialog :is(input[type="text"], input[type="date"], select, textarea) { background: var(--bg); }
+.repeat-tag { white-space: nowrap; color: var(--accent); font-weight: 500; }
+.field-hint { font-size: .8rem; color: var(--muted); }
+.seg.radios { position: relative; align-self: flex-start; background: var(--bg); }
+.seg.radios input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.seg.radios label {
+  border-radius: 99px;
+  padding: .3rem .8rem;
+  font-size: .85rem;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.seg.radios input:checked + label { font-weight: 600; }
+#edit-status-todo:checked + label { background: var(--surface-2); color: var(--ink); }
+#edit-status-doing:checked + label { background: var(--doing-bg); color: var(--doing); }
+#edit-status-done:checked + label { background: var(--done-bg); color: var(--done); }
+.seg.radios input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+.seg.radios input:disabled + label { cursor: default; }
+.form-error { color: var(--danger); font-size: .875rem; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: .5rem; }
+.dialog-actions .btn.quiet { padding: .55rem .9rem; font-size: 1rem; }
+
+/* ---------- project description and goals ---------- */
+.about { display: flex; flex-direction: column; gap: .8rem; max-width: 65ch; }
+.about-text { white-space: pre-wrap; overflow-wrap: anywhere; text-align: left; }
+#goals-block { display: flex; flex-direction: column; gap: .4rem; }
+.goals-list { display: flex; flex-direction: column; gap: .2rem; }
+.goals-list li { display: flex; align-items: flex-start; gap: .6rem; }
+.goals-list li::before {
+  content: "";
+  flex: none;
+  width: .4rem;
+  height: .4rem;
+  margin-top: .55rem;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.goals-list span { flex: 1; min-width: 0; overflow-wrap: anywhere; text-align: left; }
+.link-btn {
+  align-self: flex-start;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--accent);
+  font-size: .9rem;
+  font-weight: 500;
+}
+.link-btn:hover { text-decoration: underline; }
+
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  max-width: calc(100% - 2rem);
+  background: var(--ink);
+  color: var(--bg);
+  padding: .65rem 1rem;
+  border-radius: var(--radius);
+  font-size: .9rem;
+}
+
+@media (max-width: 760px) {
+  .panes { grid-template-columns: minmax(0, 1fr); gap: 1.75rem; }
+  #project-list {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: .5rem;
+    padding-bottom: .35rem;
+  }
+  #project-list li { flex: 0 0 auto; width: 11.5rem; }
+  .project { border-color: var(--line); }
+  .project[aria-current="true"] { border-color: var(--accent); }
+}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">Small Projects Desk</div>
+    <div class="top-right">
+      <p class="totals" id="totals"></p>
+      <div class="account" id="account" hidden>
+        <span class="account-email" id="account-email"></span>
+        <button type="button" class="btn quiet" id="backup-btn">Back up</button>
+        <button type="button" class="btn quiet" id="restore-btn">Restore</button>
+        <button type="button" class="btn quiet" id="signout-btn">Sign out</button>
+        <label class="sr" for="restore-file">Backup file to restore</label>
+        <input type="file" id="restore-file" accept="application/json,.json" hidden>
+      </div>
+    </div>
+  </header>
+
+  <section class="signin" id="signin" hidden>
+    <strong>Sign in to see your projects</strong>
+    <span>Your projects are saved to your account, so they are the same on every device.</span>
+    <button type="button" class="btn" id="signin-btn">Sign in with Google</button>
+    <p class="form-error" id="signin-error" role="alert" hidden></p>
+  </section>
+
+  <div class="notice" id="notice" hidden></div>
+
+  <div class="panes" id="workspace" hidden>
+    <aside class="index" aria-label="Projects">
+      <h2 class="label">Projects</h2>
+      <form class="inline-form" id="project-form" autocomplete="off">
+        <label class="sr" for="new-project-name">New project name</label>
+        <input type="text" id="new-project-name" dir="auto" maxlength="80" placeholder="New project name">
+        <button class="btn" type="submit" id="create-project">Create</button>
+      </form>
+      <ul id="project-list"></ul>
+    </aside>
+
+    <main id="detail">
+      <div class="placeholder" id="placeholder">
+        <strong id="placeholder-title">Loading your projects</strong>
+        <span id="placeholder-text">Your saved projects and tasks will appear here.</span>
+      </div>
+
+      <section id="project-view" hidden>
+        <div class="phead">
+          <h1 id="project-name" dir="auto"></h1>
+          <div id="delete-zone"></div>
+        </div>
+        <div class="about" id="project-about" hidden>
+          <p class="about-text" id="about-text" dir="auto"></p>
+          <div id="goals-block">
+            <h3 class="label">Goals</h3>
+            <ul class="goals-list" id="goals-list"></ul>
+          </div>
+        </div>
+        <button type="button" class="link-btn" id="add-about" hidden>+ Add a description and goals</button>
+        <div class="progress">
+          <div class="meter" id="meter" role="img"></div>
+          <div class="summary-row">
+            <span class="pill-done" id="project-badge" hidden>✓ Project done</span>
+            <span class="pill-urgent" id="project-urgent" hidden>Urgent</span>
+            <span class="due" id="project-due" hidden></span>
+            <p id="project-summary"></p>
+          </div>
+        </div>
+        <form class="inline-form" id="task-form" autocomplete="off">
+          <label class="sr" for="new-task-title">New task</label>
+          <input type="text" id="new-task-title" dir="auto" maxlength="200" placeholder="Add a task to this project">
+          <button class="btn" type="submit" id="add-task">Add task</button>
+        </form>
+        <div id="groups"></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite" hidden></div>
+
+  <dialog id="project-dialog" aria-labelledby="project-dialog-heading">
+    <form class="dialog-form" id="project-edit-form" autocomplete="off">
+      <h2 class="label" id="project-dialog-heading">Edit project</h2>
+      <div class="field">
+        <label for="project-edit-name">Project name</label>
+        <input type="text" id="project-edit-name" dir="auto" maxlength="80" required>
+      </div>
+      <div class="field">
+        <label for="project-edit-due">Deadline</label>
+        <div class="inline-form">
+          <input type="date" id="project-edit-due">
+          <button type="button" class="btn quiet" id="project-clear-due">Clear</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="project-edit-about">About this project</label>
+        <textarea id="project-edit-about" dir="auto" rows="3" maxlength="1000" placeholder="A few words about what this project is"></textarea>
+      </div>
+      <div class="field">
+        <label for="project-edit-goals">Goals</label>
+        <textarea id="project-edit-goals" dir="auto" rows="4" maxlength="2000" placeholder="One goal per line"></textarea>
+      </div>
+      <p class="form-error" id="project-edit-error" role="alert" hidden></p>
+      <div class="dialog-actions">
+        <button type="button" class="btn quiet" id="project-edit-cancel">Cancel</button>
+        <button type="submit" class="btn" id="project-edit-save">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="task-dialog" aria-labelledby="dialog-heading">
+    <form class="dialog-form" id="edit-form" autocomplete="off">
+      <h2 class="label" id="dialog-heading">Edit task</h2>
+      <div class="field">
+        <label for="edit-title">Task name</label>
+        <input type="text" id="edit-title" dir="auto" maxlength="200" required>
+      </div>
+      <fieldset class="field">
+        <legend>Status</legend>
+        <div class="seg radios">
+          <input type="radio" name="edit-status" id="edit-status-todo" value="todo"><label for="edit-status-todo">To do</label>
+          <input type="radio" name="edit-status" id="edit-status-doing" value="doing"><label for="edit-status-doing">In progress</label>
+          <input type="radio" name="edit-status" id="edit-status-done" value="done"><label for="edit-status-done">Done</label>
+        </div>
+      </fieldset>
+      <div class="field">
+        <label for="edit-due">Deadline</label>
+        <div class="inline-form">
+          <input type="date" id="edit-due">
+          <button type="button" class="btn quiet" id="clear-due">Clear</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="edit-repeat">Repeats</label>
+        <select id="edit-repeat">
+          <option value="">Does not repeat</option>
+          <option value="daily">Every day</option>
+          <option value="weekly">Every week</option>
+          <option value="monthly">Every month</option>
+        </select>
+        <span class="field-hint">When a repeating task is marked Done, it goes back to To do with its next deadline.</span>
+      </div>
+      <div class="field">
+        <label for="edit-notes">Notes</label>
+        <textarea id="edit-notes" dir="auto" rows="5" maxlength="4000" placeholder="Anything worth remembering about this task"></textarea>
+      </div>
+      <p class="form-error" id="edit-error" role="alert" hidden></p>
+      <div class="dialog-actions">
+        <button type="button" class="btn quiet" id="edit-cancel">Cancel</button>
+        <button type="submit" class="btn" id="edit-save">Save</button>
+      </div>
+    </form>
+  </dialog>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ==========================================================
+     PASTE YOUR FIREBASE CONFIG HERE (setup step 2).
+     Firebase console > Project settings > Your apps > Web app.
+     These values are meant to be public; your data is protected
+     by sign-in and the Firestore security rules.
+     ========================================================== */
+  var FIREBASE_CONFIG = {
+    apiKey: "PASTE_API_KEY",
+    authDomain: "PASTE_PROJECT_ID.firebaseapp.com",
+    projectId: "PASTE_PROJECT_ID",
+    storageBucket: "PASTE_PROJECT_ID.appspot.com",
+    messagingSenderId: "PASTE_SENDER_ID",
+    appId: "PASTE_APP_ID"
+  };
+
+  var GROUPS = [
+    { key: 'doing', label: 'In progress' },
+    { key: 'todo', label: 'To do' },
+    { key: 'done', label: 'Done' }
+  ];
+  var CONTROL = [
+    { key: 'todo', label: 'To do' },
+    { key: 'doing', label: 'In progress' },
+    { key: 'done', label: 'Done' }
+  ];
+  var VALID = { todo: 1, doing: 1, done: 1 };
+  var REPEATS = { daily: 'Repeats daily', weekly: 'Repeats weekly', monthly: 'Repeats monthly' };
+  var SELECTED_KEY = 'small-projects-desk.selected';
+
+  var state = {
+    ready: false,
+    projects: [],
+    tasks: [],
+    selected: null,
+    canWrite: true,
+    writeKnown: null,
+    confirmDelete: false,
+    editingProject: null,
+    editing: null
+  };
+  var store = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var el = function (tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text != null) node.textContent = text;
+    return node;
+  };
+  var plural = function (n, word) { return n + ' ' + word + (n === 1 ? '' : 's'); };
+
+  try { state.selected = localStorage.getItem(SELECTED_KEY); } catch (e) {}
+  function remember(id) {
+    try {
+      if (id) localStorage.setItem(SELECTED_KEY, id);
+      else localStorage.removeItem(SELECTED_KEY);
+    } catch (e) {}
+  }
+
+  /* ---------- data shaping ---------- */
+  function shapeProject(id, d) {
+    d = d || {};
+    return {
+      id: id,
+      name: String(d.name == null ? '' : d.name).slice(0, 200) || 'Untitled project',
+      done: d.done === true,
+      urgent: d.urgent === true,
+      due: typeof d.due === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d.due) ? d.due : '',
+      about: String(d.about == null ? '' : d.about).slice(0, 1000),
+      goals: String(d.goals == null ? '' : d.goals).slice(0, 2000),
+      createdAt: typeof d.createdAt === 'number' ? d.createdAt : 0
+    };
+  }
+  function shapeTask(id, d) {
+    d = d || {};
+    return {
+      id: id,
+      projectId: String(d.projectId == null ? '' : d.projectId),
+      title: String(d.title == null ? '' : d.title).slice(0, 400) || 'Untitled task',
+      status: VALID[d.status] ? d.status : 'todo',
+      due: typeof d.due === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d.due) ? d.due : '',
+      notes: String(d.notes == null ? '' : d.notes).slice(0, 4000),
+      repeat: REPEATS[d.repeat] ? d.repeat : '',
+      lastDone: typeof d.lastDone === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d.lastDone) ? d.lastDone : '',
+      createdAt: typeof d.createdAt === 'number' ? d.createdAt : 0
+    };
+  }
+  var byCreated = function (a, b) { return a.createdAt - b.createdAt || (a.id < b.id ? -1 : 1); };
+  // Soonest deadline first; tasks without a deadline follow in the order they were added.
+  var byDue = function (a, b) {
+    if (a.due !== b.due) {
+      if (!a.due) return 1;
+      if (!b.due) return -1;
+      return a.due < b.due ? -1 : 1;
+    }
+    return byCreated(a, b);
+  };
+  var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+  function todayStr() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+  function isLate(t, today) { return !!t.due && t.status !== 'done' && t.due < today; }
+  function dueInfo(t) {
+    if (!t.due) return null;
+    var p = t.due.split('-').map(Number);
+    var opts = { day: 'numeric', month: 'short' };
+    if (p[0] !== new Date().getFullYear()) opts.year = 'numeric';
+    var text = new Date(p[0], p[1] - 1, p[2]).toLocaleDateString('en-GB', opts);
+    var today = todayStr();
+    if (t.status === 'done') return { text: 'Due ' + text, cls: '' };
+    if (t.due < today) return { text: 'Overdue · ' + text, cls: 'late' };
+    if (t.due === today) return { text: 'Due today', cls: 'soon' };
+    return { text: 'Due ' + text, cls: '' };
+  }
+  function shortDate(s) {
+    var p = s.split('-').map(Number);
+    var opts = { day: 'numeric', month: 'short' };
+    if (p[0] !== new Date().getFullYear()) opts.year = 'numeric';
+    return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString('en-GB', opts);
+  }
+  // The n-th repeat after the base date. Monthly repeats keep the base day of
+  // the month, falling back to the month's last day when it is shorter.
+  function stepDate(s, repeat, n) {
+    var p = s.split('-').map(Number);
+    var d;
+    if (repeat === 'monthly') {
+      d = new Date(p[0], p[1] - 1 + n, 1);
+      var last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+      d.setDate(Math.min(p[2], last));
+    } else {
+      d = new Date(p[0], p[1] - 1, p[2] + n * (repeat === 'daily' ? 1 : 7));
+    }
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+  // Finishing a repeating task resets it to To do with its next deadline,
+  // counted from its current deadline (or today) and never left in the past.
+  function nextRound(t) {
+    var today = todayStr();
+    var base = t.due || today;
+    var n = 1;
+    var next = stepDate(base, t.repeat, n);
+    while (next <= today && n < 5000) next = stepDate(base, t.repeat, ++n);
+    return { status: 'todo', due: next, lastDone: today };
+  }
+  function notePreview(notes) {
+    var lines = notes.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+    if (!lines.length) return '';
+    return lines[0] + (lines.length > 1 ? ' …' : '');
+  }
+
+  // Open projects marked urgent first, then the rest by deadline (soonest first,
+  // no deadline after), then finished projects.
+  function projectOrder() {
+    var open = state.projects.filter(function (p) { return !p.done; });
+    return open.filter(function (p) { return p.urgent; }).sort(byDue)
+      .concat(open.filter(function (p) { return !p.urgent; }).sort(byDue))
+      .concat(state.projects.filter(function (p) { return p.done; }));
+  }
+
+  function countsFor(projectId) {
+    var c = { todo: 0, doing: 0, done: 0, total: 0 };
+    state.tasks.forEach(function (t) {
+      if (t.projectId === projectId) { c[t.status]++; c.total++; }
+    });
+    return c;
+  }
+
+  /* ---------- stores ---------- */
+  // Each person's data lives under users/<their id>/projects and users/<their id>/tasks.
+  function makeFirebaseStore(fs, uid) {
+    var root = fs.collection('users').doc(uid);
+    var projectsCol = root.collection('projects');
+    var tasksCol = root.collection('tasks');
+    var unsubs = [];
+    var got = { projects: false, tasks: false };
+    function arrived(which) {
+      got[which] = true;
+      if (got.projects && got.tasks) state.ready = true;
+      render();
+    }
+    function subError(e) {
+      showNotice(e && e.code === 'permission-denied'
+        ? 'Firebase refused to load your data. Check the Firestore security rules (step 4 of the setup).'
+        : 'Your projects could not be loaded. Check your connection and reload the page.');
+    }
+    function stamp(patch) { return Object.assign({}, patch, { updatedAt: Date.now() }); }
+    function writeAll(list) {
+      // Firestore batches hold up to 500 writes.
+      var chain = Promise.resolve();
+      for (var i = 0; i < list.length; i += 450) {
+        (function (part) {
+          chain = chain.then(function () {
+            var batch = fs.batch();
+            part.forEach(function (w) { batch.set(w.ref, w.data); });
+            return batch.commit();
+          });
+        })(list.slice(i, i + 450));
+      }
+      return chain;
+    }
+    function plain(obj) {
+      var out = {};
+      Object.keys(obj).forEach(function (k) { if (k !== 'id') out[k] = obj[k]; });
+      return out;
+    }
+    return {
+      start: function () {
+        unsubs.push(projectsCol.onSnapshot(function (snap) {
+          state.projects = snap.docs.map(function (d) { return shapeProject(d.id, d.data()); }).sort(byCreated);
+          arrived('projects');
+        }, subError));
+        unsubs.push(tasksCol.onSnapshot(function (snap) {
+          state.tasks = snap.docs.map(function (d) { return shapeTask(d.id, d.data()); }).sort(byCreated);
+          arrived('tasks');
+        }, subError));
+      },
+      stop: function () { unsubs.forEach(function (u) { u(); }); unsubs = []; },
+      exportData: function () {
+        return { app: 'small-projects-desk', version: 1, exportedAt: new Date().toISOString(),
+                 projects: state.projects, tasks: state.tasks };
+      },
+      importData: function (data) {
+        if (!data || !Array.isArray(data.projects) || !Array.isArray(data.tasks)) return Promise.reject({ code: 'bad_file' });
+        var writes = [];
+        data.projects.forEach(function (p) {
+          var s = shapeProject(String(p.id), p);
+          writes.push({ ref: projectsCol.doc(s.id), data: plain(s) });
+        });
+        data.tasks.forEach(function (t) {
+          var s = shapeTask(String(t.id), t);
+          writes.push({ ref: tasksCol.doc(s.id), data: plain(s) });
+        });
+        return writeAll(writes);
+      },
+      addProject: function (name) {
+        var ref = projectsCol.doc();
+        return ref.set({ name: name, createdAt: Date.now() }).then(function () { return ref.id; });
+      },
+      addTask: function (projectId, title) {
+        return tasksCol.doc().set({ projectId: projectId, title: title, status: 'todo', createdAt: Date.now() });
+      },
+      updateTask: function (id, patch) { return tasksCol.doc(id).update(stamp(patch)); },
+      updateProject: function (id, patch) { return projectsCol.doc(id).update(stamp(patch)); },
+      deleteTask: function (id) { return tasksCol.doc(id).delete(); },
+      deleteProject: function (id) {
+        var batch = fs.batch();
+        state.tasks.forEach(function (t) { if (t.projectId === id) batch.delete(tasksCol.doc(t.id)); });
+        batch.delete(projectsCol.doc(id));
+        return batch.commit();
+      }
+    };
+  }
+
+  /* ---------- feedback ---------- */
+  var toastTimer = null;
+  function toast(message) {
+    var t = $('toast');
+    t.textContent = message;
+    t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.hidden = true; }, 5000);
+  }
+  function showNotice(message) {
+    var n = $('notice');
+    n.textContent = message;
+    n.hidden = false;
+  }
+  function failMessage(e) {
+    var code = e && e.code;
+    if (code === 'bad_file') return 'That file is not a Small Projects Desk backup.';
+    if (code === 'permission-denied') return 'Firebase refused the change. Check that you are signed in and the security rules are published.';
+    if (code === 'not-found') return 'That item no longer exists.';
+    if (code === 'unavailable') return 'You seem to be offline. The change will be saved when the connection is back.';
+    if (code === 'quota_exceeded') return 'Storage is full. Delete some tasks or projects, then try again.';
+    if (code === 'resource_exhausted') return 'Too many changes at once. Wait a moment and try again.';
+    if (code === 'not_granted' || code === 'revoked' || (code === 'invalid_argument' && state.writeKnown !== true)) {
+      state.canWrite = false;
+      render();
+      return 'You can view this page but not change it.';
+    }
+    if (code === 'invalid_argument') return 'That item no longer exists.';
+    return 'That change was not saved. Check your connection and try again.';
+  }
+  function fail(e) { toast(failMessage(e)); }
+
+  /* ---------- rendering ---------- */
+  function resolveSelection() {
+    var found = state.projects.some(function (p) { return p.id === state.selected; });
+    if (!found && state.ready) {
+      var first = projectOrder()[0];
+      state.selected = first ? first.id : null;
+      state.confirmDelete = false;
+    }
+  }
+
+  function meterInto(node, c) {
+    node.textContent = '';
+    if (!c.total) return;
+    var done = el('span', 'm-done'); done.style.width = (c.done / c.total * 100) + '%';
+    var doing = el('span', 'm-doing'); doing.style.width = (c.doing / c.total * 100) + '%';
+    node.appendChild(done);
+    node.appendChild(doing);
+  }
+
+  function renderTotals() {
+    if (!state.ready) { $('totals').textContent = ''; return; }
+    var done = state.tasks.filter(function (t) { return t.status === 'done'; }).length;
+    var closed = state.projects.filter(function (p) { return p.done; }).length;
+    $('totals').textContent = plural(state.projects.length, 'project') + ', ' + closed + ' done · ' +
+      plural(state.tasks.length, 'task') + ', ' + done + ' done';
+  }
+
+  function renderProjects() {
+    var list = $('project-list');
+    list.textContent = '';
+    projectOrder().forEach(function (p) {
+      var c = countsFor(p.id);
+      var li = el('li');
+      var btn = el('button', 'project' + (p.done ? ' is-done' : ''));
+      btn.type = 'button';
+      btn.dataset.project = p.id;
+      if (p.id === state.selected) btn.setAttribute('aria-current', 'true');
+      var name = el('span', 'project-name', p.name);
+      name.dir = 'auto';
+      btn.appendChild(name);
+      btn.appendChild(el('span', 'project-count', p.done ? '✓ Done' : (c.total ? c.done + '/' + c.total : 'No tasks')));
+      var listDue = p.done ? null : dueInfo({ due: p.due, status: 'todo' });
+      var isUrgent = p.urgent && !p.done;
+      if (isUrgent || listDue) {
+        var flags = el('span', 'project-flags');
+        if (isUrgent) flags.appendChild(el('span', 'pill-urgent', 'Urgent'));
+        if (listDue) flags.appendChild(el('span', 'project-due due' + (listDue.cls ? ' ' + listDue.cls : ''), listDue.text));
+        btn.appendChild(flags);
+      }
+      var meter = el('div', 'meter');
+      meterInto(meter, c);
+      btn.appendChild(meter);
+      li.appendChild(btn);
+      list.appendChild(li);
+    });
+  }
+
+  function renderDeleteZone(count, project) {
+    var zone = $('delete-zone');
+    var active = document.activeElement;
+    var hadFocus = active && zone.contains(active) && active.dataset ? active.dataset.action : null;
+    zone.textContent = '';
+    if (!state.canWrite) return;
+    if (!state.confirmDelete) {
+      var toggle = el('button', 'btn quiet' + (project.done ? '' : ' good'), project.done ? 'Reopen project' : 'Mark as done');
+      toggle.type = 'button';
+      toggle.dataset.action = 'toggle-done';
+      zone.appendChild(toggle);
+      if (hadFocus === 'toggle-done') toggle.focus();
+      if (!project.done) {
+        var urgent = el('button', 'btn quiet', project.urgent ? 'Remove urgent' : 'Mark as urgent');
+        urgent.type = 'button';
+        urgent.dataset.action = 'toggle-urgent';
+        zone.appendChild(urgent);
+        if (hadFocus === 'toggle-urgent') urgent.focus();
+      }
+      var edit = el('button', 'btn quiet', 'Edit project');
+      edit.type = 'button';
+      edit.dataset.action = 'edit-project';
+      zone.appendChild(edit);
+      if (hadFocus === 'edit-project') edit.focus();
+      var ask = el('button', 'btn quiet', 'Delete project');
+      ask.type = 'button';
+      ask.dataset.action = 'ask-delete';
+      zone.appendChild(ask);
+      return;
+    }
+    zone.appendChild(el('span', null,
+      count ? 'Delete this project and its ' + plural(count, 'task') + '?' : 'Delete this project?'));
+    var yes = el('button', 'btn danger', 'Delete');
+    yes.type = 'button';
+    yes.dataset.action = 'confirm-delete';
+    var no = el('button', 'btn quiet', 'Keep');
+    no.type = 'button';
+    no.dataset.action = 'cancel-delete';
+    zone.appendChild(yes);
+    zone.appendChild(no);
+  }
+
+  function taskRow(t) {
+    var li = el('li', 'task' + (t.status === 'done' ? ' is-done' : ''));
+    var main = el('div', 'task-main');
+    var title = el('span', 'task-title', t.title);
+    title.dir = 'auto';
+    main.appendChild(title);
+    var due = dueInfo(t);
+    var preview = notePreview(t.notes);
+    if (due || preview || t.repeat) {
+      var meta = el('div', 'task-meta');
+      if (t.repeat) {
+        meta.appendChild(el('span', 'repeat-tag', '↻ ' + REPEATS[t.repeat] +
+          (t.lastDone ? ' · last done ' + shortDate(t.lastDone) : '')));
+      }
+      if (due) meta.appendChild(el('span', 'due' + (due.cls ? ' ' + due.cls : ''), due.text));
+      if (preview) {
+        var note = el('span', 'note-preview', preview);
+        note.dir = 'auto';
+        meta.appendChild(note);
+      }
+      main.appendChild(meta);
+    }
+    li.appendChild(main);
+
+    var actions = el('div', 'task-actions');
+    var seg = el('div', 'seg');
+    seg.setAttribute('role', 'group');
+    seg.setAttribute('aria-label', 'Status of ' + t.title);
+    CONTROL.forEach(function (s) {
+      var b = el('button', null, s.label);
+      b.type = 'button';
+      b.dataset.task = t.id;
+      b.dataset.status = s.key;
+      b.setAttribute('aria-pressed', String(t.status === s.key));
+      if (!state.canWrite) b.disabled = true;
+      seg.appendChild(b);
+    });
+    actions.appendChild(seg);
+    var more = el('button', 'btn quiet small', state.canWrite ? 'Edit' : 'Details');
+    more.type = 'button';
+    more.dataset.editTask = t.id;
+    more.setAttribute('aria-label', (state.canWrite ? 'Edit task: ' : 'Details of task: ') + t.title);
+    actions.appendChild(more);
+    if (state.canWrite) {
+      var rm = el('button', 'remove', '×');
+      rm.type = 'button';
+      rm.dataset.removeTask = t.id;
+      rm.setAttribute('aria-label', 'Delete task: ' + t.title);
+      actions.appendChild(rm);
+    }
+    li.appendChild(actions);
+    return li;
+  }
+
+  function renderDetail() {
+    var placeholder = $('placeholder');
+    var view = $('project-view');
+    var project = state.projects.filter(function (p) { return p.id === state.selected; })[0];
+
+    if (!project) {
+      view.hidden = true;
+      placeholder.hidden = false;
+      if (!state.ready) {
+        $('placeholder-title').textContent = 'Loading your projects';
+        $('placeholder-text').textContent = 'Your saved projects and tasks will appear here.';
+      } else {
+        $('placeholder-title').textContent = 'No projects yet';
+        $('placeholder-text').textContent = state.canWrite
+          ? 'Type a name under Projects and press Create. Then add its tasks here.'
+          : 'Nothing has been added to this page yet.';
+      }
+      return;
+    }
+
+    placeholder.hidden = true;
+    view.hidden = false;
+    $('project-name').textContent = project.name;
+    var about = project.about.trim();
+    var goals = project.goals.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+    $('project-about').hidden = !about && !goals.length;
+    $('about-text').hidden = !about;
+    $('about-text').textContent = about;
+    $('goals-block').hidden = !goals.length;
+    var goalsList = $('goals-list');
+    goalsList.textContent = '';
+    goals.forEach(function (g) {
+      var li = el('li');
+      var text = el('span', null, g);
+      text.dir = 'auto';
+      li.appendChild(text);
+      goalsList.appendChild(li);
+    });
+    $('add-about').hidden = !state.canWrite || !!about || goals.length > 0;
+
+    var c = countsFor(project.id);
+    var meter = $('meter');
+    meterInto(meter, c);
+    meter.setAttribute('aria-label', c.done + ' done, ' + c.doing + ' in progress, ' + c.todo + ' to do');
+    var today = todayStr();
+    var late = state.tasks.filter(function (t) { return t.projectId === project.id && isLate(t, today); }).length;
+    $('project-summary').textContent = c.total
+      ? c.done + ' of ' + plural(c.total, 'task') + ' done · ' + c.doing + ' in progress · ' + c.todo + ' to do' +
+        (late ? ' · ' + late + ' overdue' : '')
+      : 'No tasks yet';
+    $('project-badge').hidden = !project.done;
+    $('project-urgent').hidden = !project.urgent || project.done;
+    var projectDue = dueInfo({ due: project.due, status: project.done ? 'done' : 'todo' });
+    var dueEl = $('project-due');
+    dueEl.hidden = !projectDue;
+    dueEl.className = 'due' + (projectDue && projectDue.cls ? ' ' + projectDue.cls : '');
+    dueEl.textContent = projectDue ? projectDue.text : '';
+    renderDeleteZone(c.total, project);
+    $('task-form').hidden = !state.canWrite;
+
+    // Keep keyboard focus on the same control across a rebuild.
+    var active = document.activeElement;
+    var focusSel = null;
+    if (active && active.dataset && active.dataset.task) {
+      focusSel = 'button[data-task="' + CSS.escape(active.dataset.task) + '"][data-status="' + active.dataset.status + '"]';
+    } else if (active && active.dataset && active.dataset.editTask) {
+      focusSel = 'button[data-edit-task="' + CSS.escape(active.dataset.editTask) + '"]';
+    }
+
+    var groups = $('groups');
+    groups.textContent = '';
+    var mine = state.tasks.filter(function (t) { return t.projectId === project.id; });
+    if (!mine.length) {
+      groups.appendChild(el('p', 'empty-tasks',
+        state.canWrite ? 'Add the first task above. New tasks start in To do.' : 'This project has no tasks.'));
+    }
+    GROUPS.forEach(function (g) {
+      var rows = mine.filter(function (t) { return t.status === g.key; }).sort(byDue);
+      if (!rows.length) return;
+      var section = el('section', 'group');
+      var head = el('div', 'group-head');
+      head.appendChild(el('span', 'dot ' + g.key));
+      head.appendChild(el('h3', 'label', g.label));
+      head.appendChild(el('span', 'group-count', String(rows.length)));
+      section.appendChild(head);
+      var ul = el('ul');
+      rows.forEach(function (t) { ul.appendChild(taskRow(t)); });
+      section.appendChild(ul);
+      groups.appendChild(section);
+    });
+
+    if (focusSel) {
+      var again = groups.querySelector(focusSel);
+      if (again) again.focus();
+    }
+  }
+
+  function render() {
+    resolveSelection();
+    if (state.editing && state.ready &&
+        !state.tasks.some(function (t) { return t.id === state.editing; })) closeEditor();
+    if (state.editingProject && state.editingProject !== state.selected) closeProjectEditor();
+    $('project-form').hidden = !state.canWrite;
+    renderTotals();
+    renderProjects();
+    renderDetail();
+  }
+
+  /* ---------- actions ---------- */
+  function select(id) {
+    state.selected = id;
+    state.confirmDelete = false;
+    remember(id);
+    render();
+  }
+
+  $('project-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var input = $('new-project-name');
+    var name = input.value.trim();
+    if (!name || !store || !state.canWrite) { input.focus(); return; }
+    input.value = '';
+    store.addProject(name).then(function (id) {
+      select(id);
+      $('new-task-title').focus();
+    }).catch(function (e) {
+      if (!input.value) input.value = name;
+      fail(e);
+    });
+  });
+
+  $('task-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var input = $('new-task-title');
+    var title = input.value.trim();
+    if (!title || !store || !state.selected || !state.canWrite) { input.focus(); return; }
+    input.value = '';
+    input.focus();
+    store.addTask(state.selected, title).catch(function (e) {
+      if (!input.value) input.value = title;
+      fail(e);
+    });
+  });
+
+  $('project-list').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('button[data-project]');
+    if (btn) select(btn.dataset.project);
+  });
+
+  /* ---------- task details dialog ---------- */
+  var dlg = $('task-dialog');
+  var EDIT_FIELDS = ['edit-title', 'edit-status-todo', 'edit-status-doing', 'edit-status-done', 'edit-due', 'edit-repeat', 'edit-notes', 'clear-due'];
+  function findTask(id) { return state.tasks.filter(function (t) { return t.id === id; })[0]; }
+
+  function openEditor(id) {
+    var t = findTask(id);
+    if (!t) return;
+    state.editing = id;
+    $('edit-title').value = t.title;
+    $('edit-status-' + t.status).checked = true;
+    $('edit-due').value = t.due;
+    $('edit-repeat').value = t.repeat;
+    $('edit-notes').value = t.notes;
+    $('edit-error').hidden = true;
+    var readOnly = !state.canWrite;
+    EDIT_FIELDS.forEach(function (k) { $(k).disabled = readOnly; });
+    $('edit-save').hidden = readOnly;
+    $('edit-save').disabled = false;
+    $('edit-cancel').textContent = readOnly ? 'Close' : 'Cancel';
+    if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+  }
+  function closeEditor() {
+    if (typeof dlg.close === 'function') { if (dlg.open) dlg.close(); }
+    else { dlg.removeAttribute('open'); state.editing = null; }
+  }
+  dlg.addEventListener('close', function () {
+    var id = state.editing;
+    state.editing = null;
+    if (!id) return;
+    var back = $('groups').querySelector('button[data-edit-task="' + CSS.escape(id) + '"]');
+    if (back) back.focus();
+  });
+  dlg.addEventListener('click', function (ev) { if (ev.target === dlg) closeEditor(); });
+  $('edit-cancel').addEventListener('click', closeEditor);
+  $('clear-due').addEventListener('click', function () { $('edit-due').value = ''; $('edit-due').focus(); });
+
+  $('edit-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var id = state.editing;
+    var t = id && findTask(id);
+    if (!t || !store || !state.canWrite) { closeEditor(); return; }
+    var patch = {};
+    var title = $('edit-title').value.trim();
+    if (title && title !== t.title) patch.title = title;
+    var picked = document.querySelector('input[name="edit-status"]:checked');
+    if (picked && VALID[picked.value] && picked.value !== t.status) patch.status = picked.value;
+    var due = $('edit-due').value;
+    if (due !== t.due) patch.due = due || null;
+    var notes = $('edit-notes').value.trim();
+    if (notes !== t.notes) patch.notes = notes;
+    var repeat = $('edit-repeat').value;
+    if (!REPEATS[repeat]) repeat = '';
+    if (repeat !== t.repeat) patch.repeat = repeat;
+    var advanced = null;
+    if (patch.status === 'done' && repeat) {
+      advanced = nextRound({ due: 'due' in patch ? (patch.due || '') : t.due, repeat: repeat });
+      Object.assign(patch, advanced);
+    }
+    if (!Object.keys(patch).length) { closeEditor(); return; }
+    var save = $('edit-save');
+    save.disabled = true;
+    store.updateTask(id, patch).then(function () {
+      save.disabled = false;
+      closeEditor();
+      if (advanced) toast('Done for now. Next round is due ' + shortDate(advanced.due) + '.');
+    }).catch(function (e) {
+      save.disabled = false;
+      var err = $('edit-error');
+      err.textContent = failMessage(e);
+      err.hidden = false;
+    });
+  });
+
+  $('groups').addEventListener('click', function (ev) {
+    var more = ev.target.closest('button[data-edit-task]');
+    if (more) { openEditor(more.dataset.editTask); return; }
+    if (!store || !state.canWrite) return;
+    var statusBtn = ev.target.closest('button[data-status]');
+    if (statusBtn) {
+      if (statusBtn.getAttribute('aria-pressed') === 'true') return;
+      var target = findTask(statusBtn.dataset.task);
+      if (target && target.repeat && statusBtn.dataset.status === 'done') {
+        var round = nextRound(target);
+        store.updateTask(target.id, round).then(function () {
+          toast('Done for now. Next round is due ' + shortDate(round.due) + '.');
+        }).catch(fail);
+        return;
+      }
+      store.updateTask(statusBtn.dataset.task, { status: statusBtn.dataset.status }).catch(fail);
+      return;
+    }
+    var rm = ev.target.closest('button[data-remove-task]');
+    if (rm) store.deleteTask(rm.dataset.removeTask).catch(fail);
+  });
+
+  $('delete-zone').addEventListener('click', function (ev) {
+    var btn = ev.target.closest('button[data-action]');
+    if (!btn) return;
+    var action = btn.dataset.action;
+    if (action === 'edit-project') { openProjectEditor(); }
+    else if (action === 'toggle-done' && store && state.selected) {
+      var target = state.projects.filter(function (p) { return p.id === state.selected; })[0];
+      if (target) store.updateProject(target.id, { done: !target.done }).catch(fail);
+    }
+    else if (action === 'toggle-urgent' && store && state.selected) {
+      var hot = state.projects.filter(function (p) { return p.id === state.selected; })[0];
+      if (hot) store.updateProject(hot.id, { urgent: !hot.urgent }).catch(fail);
+    }
+    else if (action === 'ask-delete') { state.confirmDelete = true; render(); }
+    else if (action === 'cancel-delete') { state.confirmDelete = false; render(); }
+    else if (action === 'confirm-delete' && store && state.selected) {
+      var id = state.selected;
+      state.confirmDelete = false;
+      store.deleteProject(id).catch(fail);
+      render();
+    }
+  });
+
+  /* ---------- project dialog: name, description, goals ---------- */
+  var pdlg = $('project-dialog');
+  function openProjectEditor(focusId) {
+    var p = state.projects.filter(function (x) { return x.id === state.selected; })[0];
+    if (!p || !state.canWrite) return;
+    state.editingProject = p.id;
+    $('project-edit-name').value = p.name;
+    $('project-edit-due').value = p.due;
+    $('project-edit-about').value = p.about;
+    $('project-edit-goals').value = p.goals;
+    $('project-edit-error').hidden = true;
+    $('project-edit-save').disabled = false;
+    if (typeof pdlg.showModal === 'function') pdlg.showModal(); else pdlg.setAttribute('open', '');
+    if (focusId) $(focusId).focus();
+  }
+  function closeProjectEditor() {
+    if (typeof pdlg.close === 'function') { if (pdlg.open) pdlg.close(); }
+    else { pdlg.removeAttribute('open'); state.editingProject = null; }
+  }
+  pdlg.addEventListener('close', function () {
+    if (!state.editingProject) return;
+    state.editingProject = null;
+    var back = $('delete-zone').querySelector('button[data-action="edit-project"]');
+    if (back) back.focus();
+  });
+  pdlg.addEventListener('click', function (ev) { if (ev.target === pdlg) closeProjectEditor(); });
+  $('project-edit-cancel').addEventListener('click', closeProjectEditor);
+  $('project-clear-due').addEventListener('click', function () {
+    $('project-edit-due').value = '';
+    $('project-edit-due').focus();
+  });
+  $('add-about').addEventListener('click', function () { openProjectEditor('project-edit-about'); });
+
+  $('project-edit-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var id = state.editingProject;
+    var p = id && state.projects.filter(function (x) { return x.id === id; })[0];
+    if (!p || !store || !state.canWrite) { closeProjectEditor(); return; }
+    var patch = {};
+    var name = $('project-edit-name').value.trim();
+    if (name && name !== p.name) patch.name = name;
+    var due = $('project-edit-due').value;
+    if (due !== p.due) patch.due = due || null;
+    var about = $('project-edit-about').value.trim();
+    if (about !== p.about) patch.about = about;
+    var goals = $('project-edit-goals').value.trim();
+    if (goals !== p.goals) patch.goals = goals;
+    if (!Object.keys(patch).length) { closeProjectEditor(); return; }
+    var save = $('project-edit-save');
+    save.disabled = true;
+    store.updateProject(id, patch).then(function () {
+      save.disabled = false;
+      closeProjectEditor();
+    }).catch(function (e) {
+      save.disabled = false;
+      var err = $('project-edit-error');
+      err.textContent = failMessage(e);
+      err.hidden = false;
+    });
+  });
+
+  /* ---------- backup and restore ---------- */
+  $('backup-btn').addEventListener('click', function () {
+    if (!store) return;
+    var blob = new Blob([JSON.stringify(store.exportData(), null, 2)], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'small-projects-backup-' + todayStr() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    toast('Backup saved to your downloads.');
+  });
+  $('restore-btn').addEventListener('click', function () { $('restore-file').click(); });
+  $('restore-file').addEventListener('change', function () {
+    var file = this.files && this.files[0];
+    this.value = '';
+    if (!file || !store) return;
+    file.text().then(function (text) {
+      var data;
+      try { data = JSON.parse(text); } catch (e) { throw { code: 'bad_file' }; }
+      return store.importData(data).then(function () { return data; });
+    }).then(function (data) {
+      toast('Backup restored: ' + plural(data.projects.length, 'project') + ', ' + plural(data.tasks.length, 'task') + '.');
+    }).catch(fail);
+  });
+
+  /* ---------- boot: Firebase sign-in ---------- */
+  function showSignedOut(message) {
+    $('signin').hidden = false;
+    $('workspace').hidden = true;
+    $('account').hidden = true;
+    $('signin-error').hidden = !message;
+    $('signin-error').textContent = message || '';
+  }
+
+  function boot() {
+    if (!window.firebase || !FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey.indexOf('PASTE') === 0) {
+      showSignedOut('Firebase is not set up yet. Paste your Firebase config into this file (see FIREBASE_CONFIG near the top of the script).');
+      $('signin-btn').disabled = true;
+      return;
+    }
+    firebase.initializeApp(FIREBASE_CONFIG);
+    var auth = firebase.auth();
+    var fs = firebase.firestore();
+
+    $('signin-btn').addEventListener('click', function () {
+      $('signin-error').hidden = true;
+      auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function (e) {
+        if (e && e.code === 'auth/popup-closed-by-user') return;
+        showSignedOut(e && e.code === 'auth/unauthorized-domain'
+          ? 'This web address is not allowed to sign in yet. Add it under Authentication > Settings > Authorized domains in Firebase.'
+          : 'Sign-in did not work: ' + (e && e.message ? e.message : 'unknown error'));
+      });
+    });
+    $('signout-btn').addEventListener('click', function () { auth.signOut(); });
+
+    auth.onAuthStateChanged(function (u) {
+      if (store && store.stop) store.stop();
+      store = null;
+      state.ready = false;
+      state.projects = [];
+      state.tasks = [];
+      if (!u) { showSignedOut(); render(); return; }
+      $('signin').hidden = true;
+      $('workspace').hidden = false;
+      $('account').hidden = false;
+      $('account-email').textContent = u.email || u.displayName || 'Signed in';
+      store = makeFirebaseStore(fs, u.uid);
+      render();
+      store.start();
+    });
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
